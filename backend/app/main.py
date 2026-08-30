@@ -1,5 +1,12 @@
 from fastapi import FastAPI
 
+from app.db.database import Base, engine
+from app.models import User
+
+
+Base.metadata.create_all(bind=engine)
+
+
 app = FastAPI(
     title="CyberTrace API",
     description="AI-Powered Digital Forensics & Incident Investigation Platform",
