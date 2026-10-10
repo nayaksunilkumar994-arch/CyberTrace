@@ -1,4 +1,3 @@
-from datetime import datetime
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -6,6 +5,7 @@ from sqlalchemy.orm import Session
 
 from app.db.database import get_db
 from app.models.event import Event
+from app.schemas.event import EventCreate, EventResponse
 
 
 router = APIRouter(
@@ -14,25 +14,23 @@ router = APIRouter(
 )
 
 
-@router.post("/", status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/",
+    response_model=EventResponse,
+    status_code=status.HTTP_201_CREATED,
+)
 def create_event(
-    case_id: UUID,
-    event_type: str,
-    timestamp: datetime,
-    description: str,
-    severity: str,
-    source: str | None = None,
-    actor: str | None = None,
+    event_data: EventCreate,
     db: Session = Depends(get_db),
 ):
     event = Event(
-        case_id=case_id,
-        event_type=event_type,
-        timestamp=timestamp,
-        source=source,
-        actor=actor,
-        description=description,
-        severity=severity,
+        case_id=event_data.case_id,
+        event_type=event_data.event_type,
+        timestamp=event_data.timestamp,
+        source=event_data.source,
+        actor=event_data.actor,
+        description=event_data.description,
+        severity=event_data.severity,
     )
 
     db.add(event)
@@ -42,14 +40,20 @@ def create_event(
     return event
 
 
-@router.get("/")
+@router.get(
+    "/",
+    response_model=list[EventResponse],
+)
 def get_events(
     db: Session = Depends(get_db),
 ):
     return db.query(Event).all()
 
 
-@router.get("/{event_id}")
+@router.get(
+    "/{event_id}",
+    response_model=EventResponse,
+)
 def get_event(
     event_id: UUID,
     db: Session = Depends(get_db),
